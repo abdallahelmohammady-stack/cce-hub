@@ -1,0 +1,745 @@
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // رابط الـ API (تأكد أنه نفس رقم البورت في السيرفر)
+        const API_URL = '/api/courses';
+
+        // Default courses data (للتهيئة الأولى فقط إذا كانت قاعدة البيانات فارغة)
+        const defaultCourses = [
+            {
+                id: 'math3',
+                title: 'رياضة 3 ',
+                doc: 'D.E & S.V',
+                icon: 'fa-calculator',
+                sections: [
+                    { name: 'دكتور شيماء', badge: 'D.E & S.V', links: [
+                        { name: 'Differential Equations', url: 'https://youtube.com/playlist?list=PLDmD18oSY9IDFBY-Cxwov0DdietQdPrwY' },
+                        { name: 'S.V (Vector Analysis)', url: 'https://youtube.com/playlist?list=PLDmD18oSY9IBpm38QhF93VM-GeEGNiRKo' }
+                    ]},
+                    { name: 'دكتور عباس', badge: 'Course', links: [
+                        { name: 'Playlist شاملة', url: 'https://youtube.com/playlist?list=PL1YWN9bMt3OBst07eIJhwj4U256qipeTz' }
+                    ]}
+                ],
+                notes: []
+            },
+            // ... باقي المواد (logic, circuits...) كما في كودك الأصلي
+            // أضفت هنا واحداً كمثال فقط، انسخ الباقي من ملفك القديم
+            {
+                id: 'logic',
+                title: 'لوجيك 1',
+                doc: 'Digital Logic',
+                icon: 'fa-microchip',
+                sections: [
+                    { name: 'د/ أحمد صالح 👑', badge: 'King', links: [
+                        { name: 'Playlist 1', url: 'https://youtube.com/playlist?list=PL58RkuffQs13k6P5uItCg8nA0Hi3oU2TY' }
+                    ]}
+                ],
+                notes: []
+            }
+        ];
+
+        // دالة مساعدة لجلب البيانات من السيرفر
+        const fetchCourses = async () => {
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error("Error fetching courses:", error);
+                return [];
+            }
+        };
+
+        // دالة مساعدة لتحديث البيانات في السيرفر (PUT)
+        const updateCourseOnServer = async (course) => {
+            try {
+                const response = await fetch(`${API_URL}/${course.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(course)
+                });
+                return await response.json();
+            } catch (error) {
+                console.error("Error updating course:", error);
+            }
+        };
+
+        function CCEHub() {
+            const [allCourses, setAllCourses] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [currentCourseId, setCurrentCourseId] = useState(null);
+            const [view, setView] = useState('home');
+            const [searchTerm, setSearchTerm] = useState('');
+            const [currentIconBase64, setCurrentIconBase64] = useState(null);
+            const [theme, setTheme] = useState(() => {
+                if (typeof window !== 'undefined') {
+                    return (localStorage.getItem('theme')) || 'light'
+                }
+                return 'light'
+            })
+
+            // Note Modal State
+            const [noteModalOpen, setNoteModalOpen] = useState(false)
+            const [editingNoteId, setEditingNoteId] = useState(null)
+            const [tempNoteContent, setTempNoteContent] = useState('')
+
+            // Modals state
+            const [courseModalOpen, setCourseModalOpen] = useState(false)
+            const [linkModalOpen, setLinkModalOpen] = useState(false)
+            const [editLinkModalOpen, setEditLinkModalOpen] = useState(false)
+            const [editingCourseId, setEditingCourseId] = useState(null)
+            const [editingSectionIndex, setEditingSectionIndex] = useState(null)
+            const [editingLinkIndex, setEditingLinkIndex] = useState(null)
+            const [targetSectionIndex, setTargetSectionIndex] = useState(null)
+
+            // Form state
+            const [courseName, setCourseName] = useState('')
+            const [courseDoc, setCourseDoc] = useState('')
+            const [linkName, setLinkName] = useState('')
+            const [linkUrl, setLinkUrl] = useState('')
+            const [editLinkName, setEditLinkName] = useState('')
+            const [editLinkUrl, setEditLinkUrl] = useState('')
+
+            // Drag and drop state
+            const [draggedLinkInfo, setDraggedLinkInfo] = useState(null)
+            const [draggedCourseIndex, setDraggedCourseIndex] = useState(null)
+            const [draggedSectionIndex, setDraggedSectionIndex] = useState(null)
+
+            const fileInputRef = useRef(null)
+
+            // تحميل البيانات عند بدء التشغيل
+            useEffect(() => {
+                const loadData = async () => {
+                    const data = await fetchCourses();
+                    if (data.length === 0) {
+                        // إذا كانت قاعدة البيانات فارغة، نقوم برفع البيانات الافتراضية
+                        console.log("Database is empty, seeding default data...");
+                        for (const course of defaultCourses) {
+                            await fetch(API_URL, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(course)
+                            });
+                        }
+                        setAllCourses(defaultCourses);
+                    } else {
+                        setAllCourses(data);
+                    }
+                    setLoading(false);
+                };
+                loadData();
+            }, []);
+
+            // حفظ الـ Theme في المتصفح فقط (لأنه إعداد خاص بالمستخدم)
+            useEffect(() => {
+                localStorage.setItem('theme', theme)
+                if(theme === 'dark') {
+                    document.body.classList.add('dark-mode')
+                } else {
+                    document.body.classList.remove('dark-mode')
+                }
+            }, [theme])
+
+            // --- Helpers & Handlers ---
+
+            // دالة عامة لتحديث حالة التطبيق وإرسال التعديلات للسيرفر
+            const updateCourseState = (updatedCourse) => {
+                setAllCourses(prev => prev.map(c => c.id === updatedCourse.id ? updatedCourse : c));
+                updateCourseOnServer(updatedCourse);
+            };
+
+            const saveNote = () => {
+                if (!tempNoteContent.trim()) return;
+                const course = allCourses.find(c => c.id === currentCourseId);
+                if (!course) return;
+
+                let newNotes = [...course.notes];
+                if (editingNoteId) {
+                    newNotes = newNotes.map(n => n.id === editingNoteId 
+                        ? { ...n, content: tempNoteContent.trim(), updatedAt: new Date().toISOString() } 
+                        : n);
+                } else {
+                    newNotes.push({
+                        id: Date.now(),
+                        content: tempNoteContent.trim(),
+                        createdAt: new Date().toISOString()
+                    });
+                }
+                
+                const updatedCourse = { ...course, notes: newNotes };
+                updateCourseState(updatedCourse);
+                setNoteModalOpen(false);
+            }
+
+            const deleteNote = (noteId) => {
+                if(confirm('هل أنت متأكد من حذف هذه الملاحظة؟')) {
+                    const course = allCourses.find(c => c.id === currentCourseId);
+                    if (!course) return;
+                    const updatedCourse = { ...course, notes: course.notes.filter(n => n.id !== noteId) };
+                    updateCourseState(updatedCourse);
+                }
+            }
+
+            const getIcon = (name) => {
+                const n = name.toLowerCase()
+                if (n.includes('رياض') || n.includes('math')) return 'fa-calculator'
+                if (n.includes('فيز') || n.includes('phys')) return 'fa-bolt'
+                if (n.includes('دائر') || n.includes('circ') || n.includes('كهرب')) return 'fa-plug-circle-bolt'
+                if (n.includes('إلكترون') || n.includes('electr')) return 'fa-memory'
+                if (n.includes('لوجيك') || n.includes('log') || n.includes('برمجة') || n.includes('prog')) return 'fa-microchip'
+                if (n.includes('احتمال') || n.includes('stat')) return 'fa-chart-pie'
+                if (n.includes('امتحان') || n.includes('exam') || n.includes('مود')) return 'fa-file-shield'
+                return 'fa-book'
+            }
+
+            const toggleTheme = () => {
+                setTheme(prev => prev === 'light' ? 'dark' : 'light')
+            }
+
+            const saveCourseData = async () => {
+                if (!courseName.trim() || !courseDoc.trim()) {
+                    alert('يرجى ملء جميع الحقول')
+                    return
+                }
+
+                if (editingCourseId) {
+                    // تحديث مادة موجودة
+                    const course = allCourses.find(c => c.id === editingCourseId);
+                    const updatedCourse = {
+                        ...course,
+                        title: courseName.trim(),
+                        doc: courseDoc.trim(),
+                        icon: currentIconBase64 || course.icon
+                    };
+                    updateCourseState(updatedCourse);
+                } else {
+                    // إضافة مادة جديدة
+                    const newCourse = {
+                        id: `course-${Date.now()}`,
+                        title: courseName.trim(),
+                        doc: courseDoc.trim(),
+                        icon: currentIconBase64 || getIcon(courseName),
+                        sections: [],
+                        notes: []
+                    }
+                    // إضافة محلية أولاً
+                    setAllCourses(prev => [...prev, newCourse]);
+                    // إرسال للسيرفر
+                    try {
+                        await fetch(API_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(newCourse)
+                        });
+                    } catch (e) {
+                        alert('فشل الحفظ في السيرفر');
+                    }
+                }
+                setCourseModalOpen(false);
+            }
+
+            const deleteCourse = async (courseId) => {
+                if (confirm('هل أنت متأكد من الحذف؟')) {
+                    // تحديث الواجهة فوراً
+                    setAllCourses(prev => prev.filter(c => c.id !== courseId));
+                    
+                    // حذف من السيرفر
+                    try {
+                        await fetch(`${API_URL}/${courseId}`, { method: 'DELETE' });
+                        if (currentCourseId === courseId) showHome();
+                    } catch (e) {
+                        alert('فشل الحذف من السيرفر');
+                    }
+                }
+            }
+
+            const saveLinkData = () => {
+                if (!linkName.trim() || !linkUrl.trim()) {
+                    alert('يرجى ملء البيانات')
+                    return
+                }
+                const course = allCourses.find(c => c.id === currentCourseId);
+                if (!course) return;
+
+                let newSections;
+                if (targetSectionIndex !== null) {
+                    newSections = [...course.sections];
+                    newSections[targetSectionIndex].links.push({
+                        name: linkName.trim(),
+                        url: linkUrl.trim()
+                    });
+                } else {
+                    newSections = [
+                        ...course.sections,
+                        {
+                            name: `قسم جديد ${course.sections.length + 1}`,
+                            badge: 'مضاف',
+                            links: [{ name: linkName.trim(), url: linkUrl.trim() }]
+                        }
+                    ];
+                }
+                updateCourseState({ ...course, sections: newSections });
+                setLinkModalOpen(false);
+            }
+
+            const deleteLink = (courseId, sectionIndex, linkIndex) => {
+                if (confirm('حذف هذا الرابط؟')) {
+                    const course = allCourses.find(c => c.id === courseId);
+                    if (!course) return;
+                    const newSections = [...course.sections];
+                    newSections[sectionIndex].links.splice(linkIndex, 1);
+                    if (newSections[sectionIndex].links.length === 0) {
+                        newSections.splice(sectionIndex, 1);
+                    }
+                    updateCourseState({ ...course, sections: newSections });
+                }
+            }
+
+            const saveEditedLink = () => {
+                if (!editLinkName.trim() || !editLinkUrl.trim()) {
+                    alert('يرجى ملء البيانات')
+                    return
+                }
+                const course = allCourses.find(c => c.id === editingCourseId);
+                if (!course) return;
+
+                const newSections = [...course.sections];
+                newSections[editingSectionIndex].links[editingLinkIndex] = {
+                    name: editLinkName.trim(),
+                    url: editLinkUrl.trim()
+                };
+                updateCourseState({ ...course, sections: newSections });
+                setEditLinkModalOpen(false);
+            }
+
+            const editSectionName = (courseId, sectionIndex) => {
+                const course = allCourses.find(c => c.id === courseId);
+                if (!course) return;
+                const newName = prompt('أدخل الاسم الجديد للخانة:', course.sections[sectionIndex].name);
+                if (newName && newName.trim()) {
+                    const newSections = [...course.sections];
+                    newSections[sectionIndex].name = newName.trim();
+                    updateCourseState({ ...course, sections: newSections });
+                }
+            }
+
+            const deleteSection = (courseId, sectionIndex) => {
+                if (confirm('هل أنت متأكد من حذف هذه الخانة؟')) {
+                    const course = allCourses.find(c => c.id === courseId);
+                    if (!course) return;
+                    const newSections = [...course.sections];
+                    newSections.splice(sectionIndex, 1);
+                    updateCourseState({ ...course, sections: newSections });
+                }
+            }
+
+            // --- Drag & Drop Handlers ---
+            // (نفس منطق السحب والإفلات السابق، لكن في النهاية نستدعي updateCourseState)
+            
+            const handleLinkDrop = (e, targetSectionIndex, targetLinkIndex) => {
+                e.preventDefault();
+                if (!draggedLinkInfo || !currentCourseId) return;
+                const { sectionIndex: sourceSectionIndex, linkIndex: sourceLinkIndex } = draggedLinkInfo;
+
+                if (sourceSectionIndex === targetSectionIndex && sourceLinkIndex === targetLinkIndex) {
+                    setDraggedLinkInfo(null);
+                    return
+                }
+
+                const course = allCourses.find(c => c.id === currentCourseId);
+                const newSections = [...course.sections];
+                const [draggedLink] = newSections[sourceSectionIndex].links.splice(sourceLinkIndex, 1);
+                newSections[targetSectionIndex].links.splice(targetLinkIndex, 0, draggedLink);
+                
+                updateCourseState({ ...course, sections: newSections });
+                setDraggedLinkInfo(null);
+            }
+
+            const handleCourseDrop = (e, targetIndex) => {
+                e.preventDefault();
+                if (draggedCourseIndex === null || draggedCourseIndex === targetIndex) return;
+                
+                const newCourses = [...allCourses];
+                const [draggedCourse] = newCourses.splice(draggedCourseIndex, 1);
+                newCourses.splice(targetIndex, 0, draggedCourse);
+                
+                // ملاحظة: ترتيب المواد عادة يتم حفظه في مصفوفة منفصلة في الـ DB،
+                // ولكن لتبسيط الأمر هنا سنقوم بتحديث ترتيب العرض محلياً فقط
+                // أو يمكننا تحديث كل كورس لضبط ترتيبه إذا أضفنا حقل 'order'
+                // هنا سنكتفي بتحديث الحالة المحلية للترتيب
+                setAllCourses(newCourses);
+                setDraggedCourseIndex(null);
+            }
+
+            const handleSectionDrop = (e, targetIndex) => {
+                e.preventDefault();
+                if (draggedSectionIndex === null || draggedSectionIndex === targetIndex) return;
+                
+                const course = allCourses.find(c => c.id === currentCourseId);
+                const newSections = [...course.sections];
+                const [draggedSection] = newSections.splice(draggedSectionIndex, 1);
+                newSections.splice(targetIndex, 0, draggedSection);
+                
+                updateCourseState({ ...course, sections: newSections });
+                setDraggedSectionIndex(null);
+            }
+
+            // باقي دوال السحب (Start, Over) ضعها كما هي في الكود الأصلي
+            const handleLinkDragStart = (e, sectionIndex, linkIndex) => {
+                setDraggedLinkInfo({ sectionIndex, linkIndex });
+                e.dataTransfer.effectAllowed = 'move';
+            }
+            const handleLinkDragOver = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+            
+            const handleCourseDragStart = (e, courseIndex) => {
+                setDraggedCourseIndex(courseIndex);
+                e.dataTransfer.effectAllowed = 'move';
+            }
+            const handleCourseDragOver = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+
+            const handleSectionDragStart = (e, sectionIndex) => {
+                setDraggedSectionIndex(sectionIndex);
+                e.dataTransfer.effectAllowed = 'move';
+            }
+            const handleSectionDragOver = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+
+            const handleImageUpload = (e) => {
+                const file = e.target.files?.[0]
+                if (file) {
+                    if (file.type !== 'image/png') {
+                        alert('يرجى اختيار ملف بصيغة PNG فقط')
+                        return
+                    }
+                    const reader = new FileReader()
+                    reader.onload = (event) => {
+                        setCurrentIconBase64(event.target?.result)
+                    }
+                    reader.readAsDataURL(file)
+                }
+            }
+
+            const filteredCourses = allCourses.filter(course => {
+                const term = searchTerm.toLowerCase()
+                return course.title.toLowerCase().includes(term) || course.doc.toLowerCase().includes(term)
+            })
+
+            const currentCourse = allCourses.find(c => c.id === currentCourseId)
+
+            // --- Render ---
+            if (loading) return <div className="flex justify-center items-center h-screen text-2xl font-bold text-[var(--primary)]">جاري تحميل البيانات...</div>;
+
+            return (
+                <div className={`min-h-screen flex flex-col transition-colors duration-300 ${theme === 'dark' ? 'dark-mode' : ''}`}>
+                    {/* Header */}
+                    <header>
+                        <div className={`${view === 'detail' ? 'max-w-full px-4 md:px-8' : 'max-w-6xl'} mx-auto flex justify-between items-center`}>
+                         <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView('home')}>
+                        {/* اللوجو هنا */}
+                        <img src="/logo.png" alt="CCE Hub Logo" className="h-10 w-auto" />
+                    {/* إذا حبيت تكتب الاسم بجانب اللوجو احذل التعليق عن السطر التالي */}
+                    {/* <span className="text-xl font-black text-[var(--primary-dark)]">CCE Hub</span> */}
+                        </div>    
+                            
+                            <div className="flex items-center gap-4">
+                                <button className="icon-btn" onClick={toggleTheme} title="تغيير الثيم">
+                                    <i className={`fa-solid ${theme === 'light' ? 'fa-moon' : 'fa-sun'}`}></i>
+                                </button>
+                                <div className="relative w-full max-w-[280px]">
+                                    <input
+                                        type="text"
+                                        className="search-input"
+                                        placeholder="ابحث عن مادة..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                    <i className="fa-solid fa-search absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className={`${view === 'detail' ? 'w-full px-4 md:px-8' : 'max-w-6xl'} mx-auto py-8 flex-1 min-h-[70vh]`}>
+                        {/* Home View */}
+                        {view === 'home' && (
+                            <div>
+                                <div className="text-center mb-8">
+                                    <h1 className="text-3xl font-bold mb-2 text-[var(--text-primary)]">مكتبة قسم هندسة الإتصالات والحاسبات</h1>
+                                    <p className="text-[var(--text-secondary)] text-sm">النظام الموحد لإدارة المواد (مربوط بقاعدة بيانات سحابية)</p>
+                                </div>
+
+                                <div className="text-center">
+                                    <button className="add-course-btn-main" onClick={() => { setEditingCourseId(null); setCurrentIconBase64(null); setCourseName(''); setCourseDoc(''); setCourseModalOpen(true); }}>
+                                        <i className="fa-solid fa-plus-circle"></i> إضافة مقرر جديد
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-8">
+                                    {filteredCourses.map((course, index) => (
+                                        <div
+                                            key={course.id}
+                                            className={`material-card ${draggedCourseIndex === index ? 'dragging' : ''}`}
+                                            draggable
+                                            onDragStart={(e) => handleCourseDragStart(e, index)}
+                                            onDragOver={handleCourseDragOver}
+                                            onDrop={(e) => handleCourseDrop(e, index)}
+                                            onClick={(e) => {
+                                                if (!e.target.closest('.card-actions') && !e.target.closest('.course-drag-handle')) {
+                                                    setCurrentCourseId(course.id);
+                                                    setView('detail');
+                                                }
+                                            }}
+                                        >
+                                            <i className="fa-solid fa-grip-vertical course-drag-handle absolute top-2.5 right-2.5 opacity-0 hover:opacity-100 cursor-grab text-[var(--text-secondary)] z-10 transition-opacity"></i>
+                                            
+                                            <div className="card-actions absolute top-2.5 left-2.5 flex gap-1 opacity-0 hover:opacity-100 z-10 transition-opacity">
+                                                <button className="action-btn" onClick={(e) => { e.stopPropagation(); setEditingCourseId(course.id); setCurrentIconBase64(null); setCourseName(course.title); setCourseDoc(course.doc); setCourseModalOpen(true); }} title="تعديل">
+                                                    <i className="fa-solid fa-pen"></i>
+                                                </button>
+                                                <button className="action-btn delete" onClick={(e) => { e.stopPropagation(); deleteCourse(course.id) }} title="حذف">
+                                                    <i className="fa-solid fa-trash"></i>
+                                                </button>
+                                            </div>
+                                            
+                                            <div className="w-16 h-16 bg-gradient-to-br from-[var(--bg-body)] to-white text-[var(--primary)] rounded-xl flex items-center justify-center text-3xl mx-auto mb-4 border-2 border-[var(--border-color)] overflow-hidden transition-colors hover:bg-[var(--primary)] hover:text-white hover:border-[var(--primary)]">
+                                                {course.icon.startsWith('data:image') ? (
+                                                    <img src={course.icon} alt={course.title} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <i className={`fa-solid ${course.icon}`}></i>
+                                                )}
+                                            </div>
+                                            <div className="font-bold text-lg text-[var(--text-primary)]">{course.title}</div>
+                                            <div className="text-sm text-[var(--text-secondary)]">{course.doc}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Detail View */}
+                        {view === 'detail' && currentCourse && (
+                            <div className="w-full">
+                                <button className="bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-secondary)] px-4 py-2 rounded-lg cursor-pointer font-semibold flex items-center gap-2 mb-6 hover:bg-[var(--primary)] hover:text-white hover:border-[var(--primary)] transition-all" onClick={() => setView('home')}>
+                                    <i className="fa-solid fa-arrow-right"></i> عودة للقائمة
+                                </button>
+                                
+                                <div className="max-w-4xl mx-auto bg-[var(--bg-card)] p-8 rounded-2xl shadow-sm text-center border border-[var(--border-color)] mb-8">
+                                    <div className="w-20 h-20 bg-[var(--bg-body)] rounded-full flex items-center justify-center text-4xl text-[var(--accent)] mx-auto mb-4 border-4 border-[var(--accent)] overflow-hidden">
+                                        {currentCourse.icon.startsWith('data:image') ? (
+                                            <img src={currentCourse.icon} alt={currentCourse.title} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <i className={`fa-solid ${currentCourse.icon}`}></i>
+                                        )}
+                                    </div>
+                                    <h2 className="text-3xl font-extrabold text-[var(--primary-dark)] mb-1">{currentCourse.title}</h2>
+                                    <p className="text-lg text-[var(--text-secondary)] mb-6">{currentCourse.doc}</p>
+                                    
+                                    <div className="flex justify-center gap-3 flex-wrap">
+                                        <button className="bg-[var(--text-secondary)] text-white border-none px-4 py-2 rounded-lg cursor-pointer flex items-center gap-2 hover:opacity-90" onClick={() => { setEditingCourseId(currentCourse.id); setCurrentIconBase64(null); setCourseName(currentCourse.title); setCourseDoc(currentCourse.doc); setCourseModalOpen(true); }}>
+                                            <i className="fa-solid fa-pen"></i> تعديل بيانات المقرر
+                                        </button>
+                                        <button className="bg-[var(--accent)] text-white border-none px-4 py-2 rounded-lg cursor-pointer flex items-center gap-2 hover:opacity-90" onClick={() => { setTargetSectionIndex(null); setLinkName(''); setLinkUrl(''); setLinkModalOpen(true); }}>
+                                            <i className="fa-solid fa-plus"></i> إضافة رابط / قسم جديد
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Notes Board Section */}
+                                <div className="max-w-5xl mx-auto mb-10">
+                                    <div className="flex justify-between items-center mb-4 px-2">
+                                        <h3 className="text-xl font-bold text-[var(--text-primary)] flex items-center gap-2">
+                                            <i className="fa-solid fa-clipboard-list text-[#f59e0b]"></i>
+                                            سجل الملاحظات
+                                        </h3>
+                                        <button className="btn-add-note" onClick={() => { setEditingNoteId(null); setTempNoteContent(''); setNoteModalOpen(true); }}>
+                                            <i className="fa-solid fa-plus"></i> ملاحظة جديدة
+                                        </button>
+                                    </div>
+                                    
+                                    {currentCourse.notes && currentCourse.notes.length > 0 ? (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                            {currentCourse.notes.map((note) => (
+                                                <div key={note.id} className="note-card">
+                                                    <div className="text-lg font-medium whitespace-pre-wrap break-words">{note.content}</div>
+                                                    <div className="note-date">
+                                                        <span>{new Date(note.createdAt).toLocaleDateString('ar-EG')}</span>
+                                                        <div className="flex gap-2">
+                                                            <button onClick={() => { setEditingNoteId(note.id); setTempNoteContent(note.content); setNoteModalOpen(true); }} className="hover:text-[var(--primary)]"><i className="fa-solid fa-pen"></i></button>
+                                                            <button onClick={() => deleteNote(note.id)} className="hover:text-[var(--danger)]"><i className="fa-solid fa-trash"></i></button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-8 border-2 border-dashed border-[var(--border-color)] rounded-xl text-[var(--text-secondary)] bg-[var(--bg-card)]">
+                                            لا توجد ملاحظات بعد. اضغط "ملاحظة جديدة" لتسجيل أفكارك.
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="w-full">
+                                    {currentCourse.sections.length === 0 ? (
+                                        <div className="text-center text-[var(--text-secondary)] py-8">لا توجد أقسام أو روابط مضافة.</div>
+                                    ) : (
+                                        currentCourse.sections.map((section, sIndex) => (
+                                            <div
+                                                key={sIndex}
+                                                className={`bg-[var(--bg-card)] rounded-xl border border-[var(--border-color)] overflow-hidden shadow-sm mb-6 ${draggedSectionIndex === sIndex ? 'dragging' : ''}`}
+                                                draggable
+                                                onDragStart={(e) => handleSectionDragStart(e, sIndex)}
+                                                onDragOver={handleSectionDragOver}
+                                                onDrop={(e) => handleSectionDrop(e, sIndex)}
+                                            >
+                                                <div className="bg-[var(--bg-body)] p-3 border-b border-[var(--border-color)] flex justify-between items-center flex-wrap gap-2 cursor-grab active:cursor-grabbing">
+                                                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                                                        <i className="fa-solid fa-grip-vertical text-[var(--text-secondary)] cursor-grab hover:text-[var(--primary)]"></i>
+                                                        <span className="font-bold text-[var(--primary)] text-lg truncate flex-1">{section.name}</span>
+                                                        {section.badge && <span className="text-[0.7rem] bg-[var(--accent)] text-white px-2 py-0.5 rounded">{section.badge}</span>}
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <button className="action-btn" onClick={() => { setTargetSectionIndex(sIndex); setLinkName(''); setLinkUrl(''); setLinkModalOpen(true); }} title="إضافة رابط"><i className="fa-solid fa-plus"></i></button>
+                                                        <button className="action-btn" onClick={() => editSectionName(currentCourse.id, sIndex)} title="تعديل الاسم"><i className="fa-solid fa-pen"></i></button>
+                                                        <button className="action-btn delete" onClick={() => deleteSection(currentCourse.id, sIndex)} title="حذف"><i className="fa-solid fa-trash"></i></button>
+                                                    </div>
+                                                </div>
+                                                <ul className="list-none p-0">
+                                                    {section.links.map((link, lIndex) => (
+                                                        <li
+                                                            key={lIndex}
+                                                            className={`track-item ${draggedLinkInfo?.sectionIndex === sIndex && draggedLinkInfo?.linkIndex === lIndex ? 'dragging' : ''}`}
+                                                            draggable
+                                                            onDragStart={(e) => handleLinkDragStart(e, sIndex, lIndex)}
+                                                            onDragOver={handleLinkDragOver}
+                                                            onDrop={(e) => handleLinkDrop(e, sIndex, lIndex)}
+                                                        >
+                                                            <i className="fa-solid fa-grip-vertical text-[var(--text-secondary)] ml-3 cursor-grab hover:text-[var(--primary)]"></i>
+                                                            <div className="text-[var(--text-secondary)] ml-3"><i className="fa-solid fa-link"></i></div>
+                                                            <div className="flex-grow overflow-hidden" onClick={() => window.open(link.url, '_blank')}>
+                                                                <span className="font-semibold text-sm truncate block">{link.name}</span>
+                                                            </div>
+                                                            
+                                                            <button 
+                                                                className="bg-transparent border-none text-[var(--text-secondary)] cursor-pointer ml-3 hover:text-[var(--accent)] transition-colors flex-shrink-0" 
+                                                                onClick={(e) => { e.stopPropagation(); window.open(link.url, '_blank'); }} 
+                                                            >
+                                                                <i className="fa-solid fa-up-right-from-square"></i>
+                                                            </button>
+                                                            
+                                                            <button className="bg-transparent border-none text-[var(--text-secondary)] cursor-pointer ml-3 hover:text-[var(--primary)] transition-colors flex-shrink-0" onClick={() => { setEditingCourseId(currentCourse.id); setEditingSectionIndex(sIndex); setEditingLinkIndex(lIndex); setEditLinkName(link.name); setEditLinkUrl(link.url); setEditLinkModalOpen(true); }}><i className="fa-solid fa-pen"></i></button>
+                                                            <button className="bg-transparent border-none text-[var(--text-secondary)] cursor-pointer ml-3 hover:text-[var(--danger)] transition-colors flex-shrink-0" onClick={() => deleteLink(currentCourse.id, sIndex, lIndex)}><i className="fa-solid fa-trash"></i></button>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </main>
+
+                    <footer className="text-center py-8 text-[var(--text-secondary)] text-sm border-t border-[var(--border-color)]">
+                        <p>© 2026 CCE Hub. Full Stack Professional Version.</p>
+                    </footer>
+
+                    {/* Modals */}
+                    {courseModalOpen && (
+                        <div className="modal-backdrop" role="dialog" onClick={() => setCourseModalOpen(false)}>
+                            <div onClick={e => e.stopPropagation()}>
+                                <h2 className="text-2xl font-bold text-[var(--primary-dark)] mb-6 text-center">
+                                    {editingCourseId ? 'تعديل بيانات المقرر' : 'إضافة مقرر جديد'}
+                                </h2>
+                                
+                                <div className="mb-6">
+                                    <label className="block mb-2 font-bold text-[var(--text-primary)]">اسم المقرر</label>
+                                    <input className="form-input" value={courseName} onChange={(e) => setCourseName(e.target.value)} placeholder="مثال: فيزياء الحالة الصلبة" />
+                                </div>
+                                
+                                <div className="mb-6">
+                                    <label className="block mb-2 font-bold text-[var(--text-primary)]">اسم الدكتور / الملاحظة</label>
+                                    <input className="form-input" value={courseDoc} onChange={(e) => setCourseDoc(e.target.value)} placeholder="مثال: دكتور فلان" />
+                                </div>
+                                
+                                <div className="mb-6">
+                                    <label className="block mb-2 font-bold text-[var(--text-primary)]">أيقونة المقرر (اختياري - PNG)</label>
+                                    <div className="flex items-center gap-4 flex-wrap">
+                                        <button type="button" className="bg-[var(--bg-body)] text-[var(--text-primary)] border-2 border-dashed border-[var(--border-color)] px-4 py-3 rounded-lg cursor-pointer font-bold hover:border-[var(--primary)] hover:text-[var(--primary)] transition-colors flex items-center gap-2" onClick={() => fileInputRef.current?.click()}>
+                                            <i className="fa-solid fa-image"></i> رفع صورة
+                                        </button>
+                                        {currentIconBase64 && <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-[var(--border-color)]"><img src={currentIconBase64} alt="Preview" className="w-full h-full object-cover" /></div>}
+                                        {editingCourseId && !currentIconBase64 && currentCourse?.icon.startsWith('data:image') && <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-[var(--border-color)]"><img src={currentCourse.icon} alt="Current" className="w-full h-full object-cover" /></div>}
+                                        <input ref={fileInputRef} type="file" accept="image/png" onChange={handleImageUpload} style={{ display: 'none' }} />
+                                    </div>
+                                </div>
+
+                                <div className="mt-8 pt-4 border-t border-[var(--border-color)] flex justify-end gap-3 flex-wrap">
+                                    {editingCourseId && <button className="btn-delete" onClick={() => { if (confirm('هل أنت متأكد؟')) { deleteCourse(editingCourseId); setCourseModalOpen(false); setView('home'); } }}>حذف المقرر</button>}
+                                    <div className="flex-grow"></div>
+                                    <button className="btn-cancel" onClick={() => setCourseModalOpen(false)}>إلغاء</button>
+                                    <button className="btn-save" onClick={saveCourseData}>حفظ</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {noteModalOpen && (
+                        <div className="modal-backdrop" role="dialog" onClick={() => setNoteModalOpen(false)}>
+                            <div onClick={e => e.stopPropagation()} className="max-w-md !important">
+                                <h2 className="text-2xl font-bold text-[var(--primary-dark)] mb-6 text-center">{editingNoteId ? 'تعديل الملاحظة' : 'إضافة ملاحظة جديدة'}</h2>
+                                <div className="mb-6">
+                                    <textarea className="form-input min-h-[150px]" value={tempNoteContent} onChange={(e) => setTempNoteContent(e.target.value)} placeholder="اكتب ملاحظاتك هنا..."></textarea>
+                                </div>
+                                <div className="mt-8 pt-4 border-t border-[var(--border-color)] flex justify-end gap-3">
+                                    <button className="btn-cancel" onClick={() => setNoteModalOpen(false)}>إلغاء</button>
+                                    <button className="btn-save" onClick={saveNote}>حفظ</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {linkModalOpen && (
+                        <div className="modal-backdrop" role="dialog" onClick={() => setLinkModalOpen(false)}>
+                            <div onClick={e => e.stopPropagation()}>
+                                <h2 className="text-2xl font-bold text-[var(--primary-dark)] mb-6 text-center">{targetSectionIndex !== null ? 'إضافة رابط للخانة' : 'إضافة خانة جديدة'}</h2>
+                                <div className="mb-6">
+                                    <label className="block mb-2 font-bold text-[var(--text-primary)]">اسم الرابط</label>
+                                    <input className="form-input" value={linkName} onChange={(e) => setLinkName(e.target.value)} placeholder="مثال: شابتر 1" />
+                                </div>
+                                <div className="mb-6">
+                                    <label className="block mb-2 font-bold text-[var(--text-primary)]">الرابط</label>
+                                    <input className="form-input" value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="https://..." />
+                                </div>
+                                <div className="mt-8 pt-4 border-t border-[var(--border-color)] flex justify-end gap-3">
+                                    <button className="btn-cancel" onClick={() => setLinkModalOpen(false)}>إلغاء</button>
+                                    <button className="btn-save" onClick={saveLinkData}>حفظ الرابط</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {editLinkModalOpen && (
+                        <div className="modal-backdrop" role="dialog" onClick={() => setEditLinkModalOpen(false)}>
+                            <div onClick={e => e.stopPropagation()}>
+                                <h2 className="text-2xl font-bold text-[var(--primary-dark)] mb-6 text-center">تعديل الرابط</h2>
+                                <div className="mb-6">
+                                    <label className="block mb-2 font-bold text-[var(--text-primary)]">اسم الرابط</label>
+                                    <input className="form-input" value={editLinkName} onChange={(e) => setEditLinkName(e.target.value)} />
+                                </div>
+                                <div className="mb-6">
+                                    <label className="block mb-2 font-bold text-[var(--text-primary)]">الرابط</label>
+                                    <input className="form-input" value={editLinkUrl} onChange={(e) => setEditLinkUrl(e.target.value)} />
+                                </div>
+                                <div className="mt-8 pt-4 border-t border-[var(--border-color)] flex justify-end gap-3">
+                                    <button className="btn-cancel" onClick={() => setEditLinkModalOpen(false)}>إلغاء</button>
+                                    <button className="btn-save" onClick={saveEditedLink}>حفظ التعديلات</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<CCEHub />);
+    </script>
