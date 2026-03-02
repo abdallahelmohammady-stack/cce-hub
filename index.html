@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> مكتبة مواد اعدادي هندسة </title>
+    <title> مكتبة مواد اعدادي هندسة</title>
     <link rel="icon" href="favicone.png">
     <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -61,13 +61,11 @@
             line-height: 1.7;
             min-height: 100vh;
             transition: background-color 0.3s ease, color 0.3s ease;
-            /* Subtle background pattern */
             background-image: radial-gradient(var(--text-secondary) 0.5px, transparent 0.5px);
             background-size: 24px 24px;
-            font-size: 19px; /* Increased base font size */
+            font-size: 19px;
         }
 
-        /* Header Styles */
         header {
             position: sticky;
             top: 0;
@@ -83,7 +81,6 @@
             background: rgba(30, 41, 59, 0.85);
         }
 
-        /* Card Styles */
         .material-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -119,12 +116,12 @@
             background-color: var(--bg-hover);
         }
 
-        /* Icon Container - FIXED COLORS AS REQUESTED */
+        /* FIXED ICON CONTAINER */
         .fixed-icon-container {
             width: 80px;
             height: 80px;
-            background-color: var(--primary) !important; /* Always Primary */
-            color: #ffffff !important; /* Always White */
+            background-color: var(--primary) !important;
+            color: #ffffff !important;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -134,7 +131,6 @@
             box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4);
             border: 4px solid rgba(255, 255, 255, 0.2);
             overflow: hidden;
-            /* No transitions on color to prevent flashing */
         }
         
         .fixed-icon-container img {
@@ -143,9 +139,8 @@
             object-fit: cover;
         }
 
-        /* Note Cards Specific Styles */
         .note-card {
-            background: #fffbeb; /* Amber 50 */
+            background: #fffbeb;
             border: 1px solid #fcd34d;
             color: #78350f;
             border-radius: var(--radius);
@@ -159,7 +154,7 @@
         }
         
         .dark-mode .note-card {
-            background: #451a03; /* Dark amber bg */
+            background: #451a03;
             border-color: #78350f;
             color: #fcd34d;
         }
@@ -181,7 +176,6 @@
             border-top: 1px solid rgba(0,0,0,0.05);
         }
 
-        /* Modal Styles */
         [role="dialog"] > div {
             width: 100%;
             max-width: 650px !important;
@@ -210,7 +204,6 @@
             padding: 1rem;
         }
 
-        /* Utility Buttons & Inputs */
         .icon-btn {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -252,13 +245,12 @@
             box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1) !important;
         }
 
-        /* Specific Classes */
         .search-input {
             width: 100%;
             padding: 0.8rem 3rem 0.8rem 1.2rem;
             background: var(--bg-card);
             border: 2px solid var(--border-color);
-            border-radius: 50px; /* Pill shape */
+            border-radius: 50px;
             color: var(--text-primary);
             font-weight: 700;
             transition: 0.3s;
@@ -309,10 +301,9 @@
         
         .track-item:hover {
             background-color: var(--bg-hover);
-            padding-right: 1.5rem; /* Slide effect */
+            padding-right: 1.5rem;
         }
 
-        /* Standard Buttons */
         .btn-save {
             background: var(--primary);
             color: white;
@@ -416,7 +407,6 @@
             box-shadow: 0 6px 10px -1px rgba(245, 158, 11, 0.4);
         }
 
-        /* Export Button Style */
         .btn-export {
             background: var(--text-primary);
             color: var(--bg-body);
@@ -436,11 +426,10 @@
             transform: translateY(-2px);
         }
 
-        /* Toast Notification */
         .toast-container {
             position: fixed;
             bottom: 20px;
-            left: 20px; /* RTL context, left is 'end' */
+            left: 20px;
             z-index: 2000;
             display: flex;
             flex-direction: column;
@@ -472,7 +461,6 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // Default courses data (Initial State)
         const defaultCourses = [
             {
                 id: 'math3',
@@ -552,7 +540,6 @@
             }
         ];
 
-        // Simple Toast Component
         const Toast = ({ message, type, onClose }) => {
             useEffect(() => {
                 const timer = setTimeout(onClose, 3000);
@@ -598,7 +585,180 @@
                 return 'light'
             })
 
-            // Toast State
+            const [toasts, setToasts] = useState([])
+
+            const addToast = (message, type = 'info') => {
+                const id = Date.now()
+                setToasts(prev => [...prev, { id, message, type }])
+            }
+
+            const removeToast = (id) => {
+                setToasts(prev => prev.filter(t => t.id !== id))
+            }
+
+            const [noteModalOpen, setNoteModalOpen] = useState(false)
+            const [editingNoteId, setEditingNoteId] = useState(null)
+            const [tempNoteContent, setTempNoteContent] = useState('')
+
+            const [courseModalOpen, setCourseModalOpen] = useState(false)
+            const [linkModalOpen, setLinkModalOpen] = useState(false)
+            const [editLinkModalOpen, setEditLinkModalOpen] = useState(false)
+            const [editingCourseId, setEditingCourseId] = useState(null)
+            const [editingSectionIndex, setEditingSectionIndex] = useState(null)
+            const [editingLinkIndex, setEditingLinkIndex] = useState(null)
+            const [targetSectionIndex, setTargetSectionIndex] = useState(null)
+
+            const [courseName, setCourseName] = useState('')
+            const [courseDoc, setCourseDoc] = useState('')
+            const [linkName, setLinkName] = useState('')
+            const [linkUrl, setLinkUrl] = useState('')
+            const [editLinkName, setEditLinkName] = useState('')
+            const [editLinkUrl, setEditLinkUrl] = useState('')
+
+            const [draggedLinkInfo, setDraggedLinkInfo] = useState(null)
+            const [draggedCourseIndex, setDraggedCourseIndex] = useState(null)
+            const [draggedSectionIndex, setDraggedSectionIndex] = useState(null)
+
+            const fileInputRef = useRef(null)
+
+            useEffect(() => {
+                try {
+                    localStorage.setItem('allCourses', JSON.stringify(allCourses))
+                } catch (e) {
+                    addToast('تنبيه: مساحة التخزين ممتلئة.', 'error')
+                }
+            }, [allCourses])
+
+            useEffect(() => {
+                localStorage.setItem('theme', theme)
+                if(theme === 'dark') {
+                    document.body.classList.add('dark-mode')
+                } else {
+                    document.body.classList.remove('dark-mode')
+                }
+            }, [theme])
+
+            // --- ROBUST DOWNLOAD FUNCTION WITH ISOLATION ---
+            const downloadCurrentApp = () => {
+                try {
+                    // 1. Generate a Unique ID for this downloaded file
+                    const uniqueId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+
+                    // 2. Define the base structure
+                    let htmlContent = `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCE Hub - نسخة معدلة</title>
+    <link rel="icon" href="favicone.png">
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"><\/script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"><\/script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"><\/script>
+    <script src="https://cdn.tailwindcss.com"><\/script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-body: #f8fafc; --bg-card: #ffffff; --bg-hover: #e0e7ff; --text-primary: #0f172a; --text-secondary: #475569; --primary: #4f46e5; --primary-dark: #4338ca; --accent: #06b6d4; --danger: #ef4444; --border-color: #e2e8f0; --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); --radius: 16px; --modal-bg: rgba(15, 23, 42, 0.7); }
+        .dark-mode { --bg-body: #0f172a; --bg-card: #1e293b; --bg-hover: #334155; --text-primary: #f1f5f9; --text-secondary: #94a3b8; --primary: #6366f1; --primary-dark: #4f46e5; --accent: #22d3ee; --danger: #f87171; --border-color: #334155; --modal-bg: rgba(0, 0, 0, 0.85); }
+        body { font-family: 'Cairo', sans-serif; background-color: var(--bg-body); color: var(--text-primary); line-height: 1.7; min-height: 100vh; transition: background-color 0.3s ease, color 0.3s ease; background-image: radial-gradient(var(--text-secondary) 0.5px, transparent 0.5px); background-size: 24px 24px; font-size: 19px; }
+        header { position: sticky; top: 0; z-index: 1000; background: rgba(255,255,255,0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-color); padding: 0.8rem 0; transition: 0.3s; }
+        .dark-mode header { background: rgba(30, 41, 59, 0.85); }
+        .material-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 2rem 1.5rem; text-align: center; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; box-shadow: var(--shadow); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; }
+        .material-card:hover { transform: translateY(-6px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); border-color: var(--primary); }
+        .fixed-icon-container { width: 80px; height: 80px; background-color: var(--primary) !important; color: #ffffff !important; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.5rem auto; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4); border: 4px solid rgba(255, 255, 255, 0.2); overflow: hidden; }
+        .fixed-icon-container img { width: 100%; height: 100%; object-fit: cover; }
+        .note-card { background: #fffbeb; border: 1px solid #fcd34d; color: #78350f; border-radius: var(--radius); padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; min-height: 160px; transition: transform 0.2s, box-shadow 0.2s; position: relative; }
+        .dark-mode .note-card { background: #451a03; border-color: #78350f; color: #fcd34d; }
+        .note-date { font-size: 0.85rem; opacity: 0.8; margin-top: auto; padding-top: 1rem; text-align: left; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(0,0,0,0.05); }
+        .modal-backdrop { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; background-color: var(--modal-bg); backdrop-filter: blur(5px); padding: 1rem; }
+        [role="dialog"] > div { width: 100%; max-width: 650px !important; background: var(--bg-card); padding: 2.5rem !important; border-radius: 24px !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); outline: none; animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .icon-btn { background: var(--bg-card); border: 1px solid var(--border-color); width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-primary); cursor: pointer; transition: all 0.2s; font-size: 1.1rem; }
+        .icon-btn:hover { background: var(--primary); color: white; border-color: var(--primary); transform: translateY(-2px); }
+        .form-input { width: 100%; padding: 1rem 1.25rem !important; border-radius: 12px !important; border: 2px solid var(--border-color) !important; background: var(--bg-body) !important; color: var(--text-primary) !important; font-size: 1.1rem !important; font-weight: 500 !important; transition: 0.2s; font-family: 'Cairo', sans-serif; }
+        .form-input:focus { border-color: var(--primary) !important; outline: none !important; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1) !important; }
+        .search-input { width: 100%; padding: 0.8rem 3rem 0.8rem 1.2rem; background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 50px; color: var(--text-primary); font-weight: 700; transition: 0.3s; font-family: 'Cairo', sans-serif; }
+        .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
+        .action-btn { background: var(--bg-body); border: 1px solid var(--border-color); width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-secondary); font-size: 0.9rem; transition: 0.2s; }
+        .action-btn:hover { color: var(--primary); border-color: var(--primary); background: #fff; }
+        .action-btn.delete:hover { color: var(--danger); border-color: var(--danger); }
+        .track-item { display: flex; align-items: center; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-color); text-decoration: none; color: var(--text-primary); transition: 0.2s; cursor: pointer; }
+        .track-item:hover { background-color: var(--bg-hover); padding-right: 1.5rem; }
+        .btn-save { background: var(--primary); color: white; border: none; padding: 1rem 2.5rem; border-radius: 12px; cursor: pointer; font-weight: 800; font-size: 1.1rem; transition: 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; font-family: 'Cairo', sans-serif; }
+        .btn-save:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4); }
+        .btn-cancel { background: transparent; border: 2px solid var(--border-color); color: var(--text-secondary); padding: 1rem 2rem; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 1.1rem; transition: 0.2s; font-family: 'Cairo', sans-serif; }
+        .btn-cancel:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--text-secondary); }
+        .btn-delete { background: var(--danger); color: white; border: none; padding: 1rem 2rem; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 1.1rem; transition: 0.2s; font-family: 'Cairo', sans-serif; }
+        .btn-delete:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); }
+        .add-course-btn-main { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; border: none; padding: 1rem 2.5rem; border-radius: 50px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 12px; margin: 1.5rem auto; box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4); transition: 0.3s; font-size: 1.2rem; }
+        .add-course-btn-main:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 15px 30px -5px rgba(79, 70, 229, 0.5); }
+        .btn-add-note { background: #f59e0b; color: white; border: none; padding: 0.7rem 1.5rem; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 1rem; transition: 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.3); }
+        .btn-add-note:hover { background: #d97706; transform: translateY(-2px); box-shadow: 0 6px 10px -1px rgba(245, 158, 11, 0.4); }
+        .toast-container { position: fixed; bottom: 20px; left: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: var(--bg-card); color: var(--text-primary); padding: 1rem 1.5rem; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-right: 4px solid var(--primary); font-weight: 600; display: flex; align-items: center; gap: 10px; animation: slideIn 0.3s ease-out; min-width: 300px; }
+        @keyframes slideIn { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // Embedded Data (Snapshot)
+        const defaultCourses = ${JSON.stringify(allCourses, null, 4)};
+
+        // Simple Toast Component
+        const Toast = ({ message, type, onClose }) => {
+            useEffect(() => {
+                const timer = setTimeout(onClose, 3000);
+                return () => clearTimeout(timer);
+            }, [onClose]);
+
+            const bgColors = {
+                success: 'border-green-500',
+                error: 'border-red-500',
+                info: 'border-blue-500'
+            };
+
+            return (
+                <div className={\`toast \${bgColors[type] || 'border-primary'}\`}>
+                    <i className={\`fa-solid \${type === 'success' ? 'fa-check-circle text-green-500' : type === 'error' ? 'fa-circle-exclamation text-red-500' : 'fa-info-circle text-blue-500'}\`}></i>
+                    <span>{message}</span>
+                </div>
+            );
+        };
+
+        function CCEHub() {
+            // FIX: Inject Unique ID into LocalStorage keys
+            const APP_ID = "${uniqueId}";
+
+            const [allCourses, setAllCourses] = useState(() => {
+                if (typeof window === 'undefined') return defaultCourses;
+                try {
+                    // Use unique key: 'allCourses_' + APP_ID
+                    const storedCourses = localStorage.getItem('allCourses_' + APP_ID);
+                    if (storedCourses) {
+                        const parsed = JSON.parse(storedCourses);
+                        const sanitized = parsed.map(c => ({...c, notes: Array.isArray(c.notes) ? c.notes : []}));
+                        return sanitized.length > 0 ? sanitized : defaultCourses;
+                    }
+                } catch (e) { console.error(e); }
+                return defaultCourses;
+            });
+
+            const [currentCourseId, setCurrentCourseId] = useState(null)
+            const [view, setView] = useState('home')
+            const [searchTerm, setSearchTerm] = useState('')
+            const [currentIconBase64, setCurrentIconBase64] = useState(null)
+            const [theme, setTheme] = useState(() => {
+                if (typeof window !== 'undefined') {
+                    // Use unique key: 'theme_' + APP_ID
+                    return (localStorage.getItem('theme_' + APP_ID)) || 'light'
+                }
+                return 'light'
+            })
+
             const [toasts, setToasts] = useState([])
 
             const addToast = (message, type = 'info') => {
@@ -642,64 +802,22 @@
             // Effects
             useEffect(() => {
                 try {
-                    localStorage.setItem('allCourses', JSON.stringify(allCourses))
+                    // Save to unique key
+                    localStorage.setItem('allCourses_' + APP_ID, JSON.stringify(allCourses))
                 } catch (e) {
                     addToast('تنبيه: مساحة التخزين ممتلئة.', 'error')
                 }
             }, [allCourses])
 
             useEffect(() => {
-                localStorage.setItem('theme', theme)
+                // Save theme to unique key
+                localStorage.setItem('theme_' + APP_ID, theme)
                 if(theme === 'dark') {
                     document.body.classList.add('dark-mode')
                 } else {
                     document.body.classList.remove('dark-mode')
                 }
             }, [theme])
-
-            // --- Download / Export Functionality ---
-            const downloadCurrentApp = () => {
-                try {
-                    // 1. Get current HTML
-                    let htmlContent = document.documentElement.outerHTML;
-
-                    // 2. Prepare the data string (the new defaultCourses)
-                    const newDataString = JSON.stringify(allCourses, null, 4); // Pretty print
-                    
-                    // 3. Replace the defaultCourses variable in the script
-                    // Regex looks for: const defaultCourses = [ ... ];
-                    const defaultCoursesRegex = /const defaultCourses = \[[\s\S]*?\];/;
-                    
-                    if (!defaultCoursesRegex.test(htmlContent)) {
-                        addToast('فشل تحديث البيانات في الكود.', 'error');
-                        return;
-                    }
-
-                    htmlContent = htmlContent.replace(defaultCoursesRegex, `const defaultCourses = ${newDataString};`);
-
-                    // 4. Remove the "Export" button from the downloaded code
-                    // We look for the div wrapper we added in the render (id="export-wrapper")
-                    const exportWrapperRegex = /<div id="export-wrapper"[^>]*>[\s\S]*?<\/div>\s*/;
-                    htmlContent = htmlContent.replace(exportWrapperRegex, '');
-
-                    // 5. Create blob and download
-                    const blob = new Blob([htmlContent], { type: 'text/html' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `CCE_Hub_Backup_${new Date().toISOString().slice(0,10)}.html`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-
-                    addToast('تم تحميل النسخة المعدلة بنجاح!', 'success');
-                } catch (error) {
-                    console.error(error);
-                    addToast('حدث خطأ أثناء إنشاء الملف.', 'error');
-                }
-            };
-
 
             // Note Handlers
             const openAddNoteModal = () => {
@@ -812,7 +930,7 @@
                     addToast('تم تعديل المقرر', 'success')
                 } else {
                     const newCourse = {
-                        id: `course-${Date.now()}`,
+                        id: \`course-\${Date.now()}\`,
                         title: courseName.trim(),
                         doc: courseDoc.trim(),
                         icon: currentIconBase64 || getIcon(courseName),
@@ -873,7 +991,7 @@
                                 sections: [
                                     ...course.sections,
                                     {
-                                        name: `قسم جديد ${course.sections.length + 1}`,
+                                        name: \`قسم جديد \${course.sections.length + 1}\`,
                                         badge: 'مضاف',
                                         links: [{ name: linkName.trim(), url: linkUrl.trim() }]
                                     }
@@ -1078,7 +1196,7 @@
             const currentCourse = allCourses.find(c => c.id === currentCourseId)
 
             return (
-                <div className={`min-h-screen flex flex-col transition-colors duration-300 ${theme === 'dark' ? 'dark-mode' : ''}`}>
+                <div className={\`min-h-screen flex flex-col transition-colors duration-300 \${theme === 'dark' ? 'dark-mode' : ''}\`}>
                     {/* Toasts */}
                     <div className="toast-container">
                         {toasts.map(toast => (
@@ -1088,15 +1206,633 @@
 
                     {/* Header */}
                     <header>
+                        <div className={\`\${view === 'detail' ? 'max-w-full px-4 md:px-8' : 'max-w-7xl'} mx-auto flex justify-between items-center\`}>
+                            <div className="flex items-center gap-3 text-2xl font-black text-[var(--primary-dark)] cursor-pointer" onClick={showHome}>
+                                <i className="fa-solid fa-network-wired text-[var(--accent)]"></i> CCE Hub
+                            </div>
+                            
+                            <div className="flex items-center gap-4">
+                                <button className="icon-btn" onClick={toggleTheme} title="تغيير الثيم">
+                                    <i className={\`fa-solid \${theme === 'light' ? 'fa-moon' : 'fa-sun'}\`}></i>
+                                </button>
+                                <div className="relative w-full max-w-[300px] hidden md:block">
+                                    <input
+                                        type="text"
+                                        className="search-input"
+                                        placeholder="ابحث عن مادة..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                    <i className="fa-solid fa-search absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="md:hidden px-4 mt-3">
+                            <input
+                                type="text"
+                                className="search-input"
+                                placeholder="ابحث عن مادة..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                    </header>
+
+                    <main className={\`\${view === 'detail' ? 'w-full px-4 md:px-8' : 'max-w-7xl'} mx-auto py-10 flex-1 min-h-[70vh]\`}>
+                        {/* Home View */}
+                        {view === 'home' && (
+                            <div>
+                                <div className="text-center mb-10">
+                                    <h1 className="text-4xl md:text-5xl font-black mb-3 text-[var(--text-primary)]">مكتبة قسم هندسة الإتصالات والحاسبات</h1>
+                                    <p className="text-[var(--text-secondary)] text-lg font-medium">النظام الموحد لإدارة المواد</p>
+                                </div>
+
+                                <div className="text-center">
+                                    <button className="add-course-btn-main" onClick={openCourseModal}>
+                                        <i className="fa-solid fa-plus-circle"></i> إضافة مقرر جديد
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mt-12">
+                                    {filteredCourses.map((course, index) => (
+                                        <div
+                                            key={course.id}
+                                            className={\`material-card\`}
+                                            onClick={(e) => {
+                                                if (!e.target.closest('.card-actions') && !e.target.closest('.course-drag-handle')) {
+                                                    openDetail(course.id)
+                                                }
+                                            }}
+                                        >
+                                            <div className="card-actions absolute top-4 left-4 flex gap-2 opacity-0 hover:opacity-100 z-10 transition-opacity">
+                                                <button className="action-btn" onClick={(e) => { e.stopPropagation(); openEditCourseModal(course.id) }} title="تعديل">
+                                                    <i className="fa-solid fa-pen"></i>
+                                                </button>
+                                                <button className="action-btn delete" onClick={(e) => { e.stopPropagation(); deleteCourse(course.id) }} title="حذف">
+                                                    <i className="fa-solid fa-trash"></i>
+                                                </button>
+                                            </div>
+                                            
+                                            <div className="fixed-icon-container">
+                                                {course.icon.startsWith('data:image') ? (
+                                                    <img src={course.icon} alt={course.title} />
+                                                ) : (
+                                                    <i className={\`fa-solid \${course.icon}\`}></i>
+                                                )}
+                                            </div>
+                                            
+                                            <div className="font-bold text-xl text-[var(--text-primary)] mb-1">{course.title}</div>
+                                            <div className="text-base text-[var(--text-secondary)] font-medium">{course.doc}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Detail View */}
+                        {view === 'detail' && currentCourse && (
+                            <div className="w-full">
+                                <button className="bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-secondary)] px-6 py-3 rounded-xl cursor-pointer font-bold flex items-center gap-3 mb-8 hover:bg-[var(--primary)] hover:text-white hover:border-[var(--primary)] transition-all shadow-sm" onClick={showHome}>
+                                    <i className="fa-solid fa-arrow-right"></i> عودة للقائمة
+                                </button>
+                                
+                                <div className="max-w-4xl mx-auto bg-[var(--bg-card)] p-10 rounded-3xl shadow-sm text-center border border-[var(--border-color)] mb-12">
+                                    <div className="fixed-icon-container !w-24 !h-24 !text-5xl !mb-6 !shadow-xl">
+                                        {currentCourse.icon.startsWith('data:image') ? (
+                                            <img src={currentCourse.icon} alt={currentCourse.title} />
+                                        ) : (
+                                            <i className={\`fa-solid \${currentCourse.icon}\`}></i>
+                                        )}
+                                    </div>
+                                    <h2 className="text-4xl font-black text-[var(--primary-dark)] mb-2">{currentCourse.title}</h2>
+                                    <p className="text-xl text-[var(--text-secondary)] mb-8 font-medium">{currentCourse.doc}</p>
+                                    
+                                    <div className="flex justify-center gap-4 flex-wrap">
+                                        <button className="bg-[var(--text-secondary)] text-white border-none px-6 py-3 rounded-xl cursor-pointer flex items-center gap-2 hover:opacity-90 font-bold shadow-md transition-transform hover:-translate-y-1" onClick={() => openEditCourseModal(currentCourse.id)}>
+                                            <i className="fa-solid fa-pen"></i> تعديل بيانات المقرر
+                                        </button>
+                                        <button className="bg-[var(--accent)] text-white border-none px-6 py-3 rounded-xl cursor-pointer flex items-center gap-2 hover:opacity-90 font-bold shadow-md transition-transform hover:-translate-y-1" onClick={() => openLinkModal(null)}>
+                                            <i className="fa-solid fa-plus"></i> إضافة رابط / قسم جديد
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Notes Board Section */}
+                                <div className="max-w-6xl mx-auto mb-12">
+                                    <div className="flex justify-between items-center mb-6 px-2">
+                                        <h3 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-3">
+                                            <i className="fa-solid fa-clipboard-list text-[#f59e0b]"></i>
+                                            سجل الملاحظات
+                                        </h3>
+                                        <button className="btn-add-note" onClick={openAddNoteModal}>
+                                            <i className="fa-solid fa-plus"></i> ملاحظة جديدة
+                                        </button>
+                                    </div>
+                                    
+                                    {currentCourse.notes && currentCourse.notes.length > 0 ? (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                            {currentCourse.notes.map((note) => (
+                                                <div key={note.id} className="note-card">
+                                                    <div className="text-lg font-medium whitespace-pre-wrap break-words leading-relaxed">{note.content}</div>
+                                                    <div className="note-date">
+                                                        <span className="text-sm">{formatDate(note.createdAt)}</span>
+                                                        <div className="flex gap-3 text-lg">
+                                                            <button onClick={() => openEditNoteModal(note)} className="hover:text-[var(--primary)] transition-colors"><i className="fa-solid fa-pen"></i></button>
+                                                            <button onClick={() => deleteNote(note.id)} className="hover:text-[var(--danger)] transition-colors"><i className="fa-solid fa-trash"></i></button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-12 border-2 border-dashed border-[var(--border-color)] rounded-2xl text-[var(--text-secondary)] bg-[var(--bg-card)] text-lg font-medium">
+                                            لا توجد ملاحظات بعد.
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="w-full max-w-5xl mx-auto">
+                                    {currentCourse.sections.length === 0 ? (
+                                        <div className="text-center text-[var(--text-secondary)] py-12 text-lg border-2 border-dashed border-[var(--border-color)] rounded-2xl bg-[var(--bg-card)]">لا توجد أقسام أو روابط مضافة.</div>
+                                    ) : (
+                                        currentCourse.sections.map((section, sIndex) => (
+                                            <div key={sIndex} className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-color)] overflow-hidden shadow-sm mb-8">
+                                                <div className="bg-[var(--bg-body)] p-4 border-b border-[var(--border-color)] flex justify-between items-center flex-wrap gap-3">
+                                                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                                                        <span className="font-bold text-[var(--primary)] text-xl truncate flex-1">{section.name}</span>
+                                                        {section.badge && <span className="text-xs bg-[var(--accent)] text-white px-3 py-1 rounded-full font-bold shadow-sm">{section.badge}</span>}
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <button className="action-btn" onClick={() => openLinkModal(sIndex)} title="إضافة رابط"><i className="fa-solid fa-plus"></i></button>
+                                                        <button className="action-btn" onClick={() => editSectionName(currentCourse.id, sIndex)} title="تعديل الاسم"><i className="fa-solid fa-pen"></i></button>
+                                                        <button className="action-btn delete" onClick={() => deleteSection(currentCourse.id, sIndex)} title="حذف الخانة"><i className="fa-solid fa-trash"></i></button>
+                                                    </div>
+                                                </div>
+                                                <ul className="list-none p-0">
+                                                    {section.links.map((link, lIndex) => (
+                                                        <li key={lIndex} className="track-item">
+                                                            <div className="text-[var(--text-secondary)] ml-4 text-lg"><i className="fa-solid fa-link"></i></div>
+                                                            <div className="flex-grow overflow-hidden" onClick={() => window.open(link.url, '_blank')}>
+                                                                <span className="font-bold text-base truncate block">{link.name}</span>
+                                                            </div>
+                                                            
+                                                            <button 
+                                                                className="bg-transparent border-none text-[var(--text-secondary)] cursor-pointer ml-4 hover:text-[var(--accent)] transition-colors flex-shrink-0 text-lg p-2" 
+                                                                onClick={(e) => { e.stopPropagation(); window.open(link.url, '_blank'); }}
+                                                                title="فتح الرابط"
+                                                            >
+                                                                <i className="fa-solid fa-up-right-from-square"></i>
+                                                            </button>
+                                                            
+                                                            <button className="bg-transparent border-none text-[var(--text-secondary)] cursor-pointer ml-4 hover:text-[var(--primary)] transition-colors flex-shrink-0 text-lg p-2" onClick={() => openEditLinkModal(currentCourse.id, sIndex, lIndex)}><i className="fa-solid fa-pen"></i></button>
+                                                            <button className="bg-transparent border-none text-[var(--text-secondary)] cursor-pointer ml-4 hover:text-[var(--danger)] transition-colors flex-shrink-0 text-lg p-2" onClick={() => deleteLink(currentCourse.id, sIndex, lIndex)}><i className="fa-solid fa-trash"></i></button>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </main>
+
+                    <footer className="text-center py-10 text-[var(--text-secondary)] text-base border-t border-[var(--border-color)] bg-[var(--bg-card)] mt-10">
+                        <p className="font-medium">© 2026 CCE Hub. نظام إدارة المحتوى الموحد.</p>
+                    </footer>
+
+                    {/* Modals */}
+                    {courseModalOpen && (
+                        <div className="modal-backdrop" role="dialog" onClick={() => setCourseModalOpen(false)}>
+                            <div onClick={e => e.stopPropagation()}>
+                                <h2 className="text-3xl font-black text-[var(--primary-dark)] mb-8 text-center">
+                                    {editingCourseId ? 'تعديل بيانات المقرر' : 'إضافة مقرر جديد'}
+                                </h2>
+                                
+                                <div className="mb-8">
+                                    <label className="block mb-3 font-bold text-[var(--text-primary)] text-lg">اسم المقرر</label>
+                                    <input className="form-input" value={courseName} onChange={(e) => setCourseName(e.target.value)} placeholder="مثال: فيزياء الحالة الصلبة" />
+                                </div>
+                                
+                                <div className="mb-8">
+                                    <label className="block mb-3 font-bold text-[var(--text-primary)] text-lg">اسم الدكتور / الملاحظة</label>
+                                    <input className="form-input" value={courseDoc} onChange={(e) => setCourseDoc(e.target.value)} placeholder="مثال: دكتور فلان" />
+                                </div>
+                                
+                                <div className="mb-8">
+                                    <label className="block mb-3 font-bold text-[var(--text-primary)] text-lg">أيقونة المقرر (اختياري - PNG)</label>
+                                    <div className="flex items-center gap-4 flex-wrap">
+                                        <button type="button" className="bg-[var(--bg-body)] text-[var(--text-primary)] border-2 border-dashed border-[var(--border-color)] px-6 py-4 rounded-xl cursor-pointer font-bold hover:border-[var(--primary)] hover:text-[var(--primary)] transition-colors flex items-center gap-3 text-lg" onClick={() => fileInputRef.current?.click()}>
+                                            <i className="fa-solid fa-image"></i> رفع صورة
+                                        </button>
+                                        {currentIconBase64 && <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-[var(--border-color)] flex-shrink-0 shadow-md"><img src={currentIconBase64} alt="Preview" className="w-full h-full object-cover" /></div>}
+                                        <input ref={fileInputRef} type="file" accept="image/png" onChange={handleImageUpload} style={{ display: 'none' }} />
+                                    </div>
+                                </div>
+
+                                <div className="mt-10 pt-6 border-t border-[var(--border-color)] flex justify-end gap-4 flex-wrap">
+                                    {editingCourseId && <button className="btn-delete" onClick={() => { if(confirm('هل أنت متأكد؟')) { deleteCourse(editingCourseId); setCourseModalOpen(false); showHome(); } }}>حذف المقرر</button>}
+                                    <div className="flex-grow"></div>
+                                    <button className="btn-cancel" onClick={() => setCourseModalOpen(false)}>إلغاء</button>
+                                    <button className="btn-save" onClick={saveCourseData}>حفظ</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {noteModalOpen && (
+                        <div className="modal-backdrop" role="dialog" onClick={() => setNoteModalOpen(false)}>
+                            <div onClick={e => e.stopPropagation()}>
+                                <h2 className="text-3xl font-black text-[var(--primary-dark)] mb-8 text-center">
+                                    {editingNoteId ? 'تعديل الملاحظة' : 'إضافة ملاحظة جديدة'}
+                                </h2>
+                                <div className="mb-8">
+                                    <textarea className="form-input min-h-[180px]" value={tempNoteContent} onChange={(e) => setTempNoteContent(e.target.value)} placeholder="اكتب ملاحظاتك هنا..."></textarea>
+                                </div>
+                                <div className="mt-10 pt-6 border-t border-[var(--border-color)] flex justify-end gap-4">
+                                    <button className="btn-cancel" onClick={() => setNoteModalOpen(false)}>إلغاء</button>
+                                    <button className="btn-save" onClick={saveNote}>حفظ</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {linkModalOpen && (
+                        <div className="modal-backdrop" role="dialog" onClick={() => setLinkModalOpen(false)}>
+                            <div onClick={e => e.stopPropagation()}>
+                                <h2 className="text-3xl font-black text-[var(--primary-dark)] mb-8 text-center">
+                                    {targetSectionIndex !== null ? 'إضافة رابط' : 'إضافة خانة جديدة'}
+                                </h2>
+                                <div className="mb-8">
+                                    <label className="block mb-3 font-bold text-[var(--text-primary)] text-lg">اسم الرابط</label>
+                                    <input className="form-input" value={linkName} onChange={(e) => setLinkName(e.target.value)} placeholder="اسم الرابط" />
+                                </div>
+                                <div className="mb-8">
+                                    <label className="block mb-3 font-bold text-[var(--text-primary)] text-lg">الرابط</label>
+                                    <input className="form-input" value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="https://..." />
+                                </div>
+                                <div className="mt-10 pt-6 border-t border-[var(--border-color)] flex justify-end gap-4">
+                                    <button className="btn-cancel" onClick={() => setLinkModalOpen(false)}>إلغاء</button>
+                                    <button className="btn-save" onClick={saveLinkData}>حفظ الرابط</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {editLinkModalOpen && (
+                        <div className="modal-backdrop" role="dialog" onClick={() => setEditLinkModalOpen(false)}>
+                            <div onClick={e => e.stopPropagation()}>
+                                <h2 className="text-3xl font-black text-[var(--primary-dark)] mb-8 text-center">تعديل الرابط</h2>
+                                <div className="mb-8">
+                                    <label className="block mb-3 font-bold text-[var(--text-primary)] text-lg">اسم الرابط</label>
+                                    <input className="form-input" value={editLinkName} onChange={(e) => setEditLinkName(e.target.value)} />
+                                </div>
+                                <div className="mb-8">
+                                    <label className="block mb-3 font-bold text-[var(--text-primary)] text-lg">الرابط</label>
+                                    <input className="form-input" value={editLinkUrl} onChange={(e) => setEditLinkUrl(e.target.value)} />
+                                </div>
+                                <div className="mt-10 pt-6 border-t border-[var(--border-color)] flex justify-end gap-4">
+                                    <button className="btn-cancel" onClick={() => setEditLinkModalOpen(false)}>إلغاء</button>
+                                    <button className="btn-save" onClick={saveEditedLink}>حفظ التعديلات</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<CCEHub />);
+    <\/script>
+</body>
+</html>`;
+
+                    // 3. Create the file
+                    const blob = new Blob([htmlContent], { type: 'text/html' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `CCE_Hub_Snapshot_${new Date().toISOString().slice(0,10)}.html`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    addToast('تم تحميل النسخة المستقلة بنجاح!', 'success');
+
+                } catch (error) {
+                    console.error(error);
+                    addToast('حدث خطأ غير متوقع أثناء التحميل', 'error');
+                }
+            };
+
+            // ... (Rest of the handlers are identical to previous version)
+            const openAddNoteModal = () => {
+                setEditingNoteId(null)
+                setTempNoteContent('')
+                setNoteModalOpen(true)
+            }
+
+            const openEditNoteModal = (note) => {
+                setEditingNoteId(note.id)
+                setTempNoteContent(note.content)
+                setNoteModalOpen(true)
+            }
+
+            const saveNote = () => {
+                if (!tempNoteContent.trim()) return
+                setAllCourses(prev => prev.map(course => {
+                    if (course.id === currentCourseId) {
+                        let newNotes = [...course.notes]
+                        if (editingNoteId) {
+                            newNotes = newNotes.map(n => n.id === editingNoteId 
+                                ? { ...n, content: tempNoteContent.trim(), updatedAt: new Date().toISOString() } 
+                                : n)
+                        } else {
+                            newNotes.push({ id: Date.now(), content: tempNoteContent.trim(), createdAt: new Date().toISOString() })
+                        }
+                        return { ...course, notes: newNotes }
+                    }
+                    return course
+                }))
+                setNoteModalOpen(false)
+                addToast('تم حفظ الملاحظة', 'success')
+            }
+
+            const deleteNote = (noteId) => {
+                if(confirm('هل أنت متأكد من حذف هذه الملاحظة؟')) {
+                    setAllCourses(prev => prev.map(course => {
+                        if (course.id === currentCourseId) {
+                            return { ...course, notes: course.notes.filter(n => n.id !== noteId) }
+                        }
+                        return course
+                    }))
+                    addToast('تم حذف الملاحظة', 'info')
+                }
+            }
+
+            const formatDate = (isoString) => {
+                const date = new Date(isoString)
+                return date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' })
+            }
+
+            const getIcon = (name) => {
+                const n = name.toLowerCase()
+                if (n.includes('رياض') || n.includes('math')) return 'fa-calculator'
+                if (n.includes('فيز') || n.includes('phys')) return 'fa-bolt'
+                if (n.includes('دائر') || n.includes('circ') || n.includes('كهرب')) return 'fa-plug-circle-bolt'
+                if (n.includes('إلكترون') || n.includes('electr')) return 'fa-memory'
+                if (n.includes('لوجيك') || n.includes('log') || n.includes('برمجة') || n.includes('prog')) return 'fa-microchip'
+                if (n.includes('احتمال') || n.includes('stat')) return 'fa-chart-pie'
+                if (n.includes('امتحان') || n.includes('exam') || n.includes('مود')) return 'fa-file-shield'
+                return 'fa-book'
+            }
+
+            const toggleTheme = () => {
+                setTheme(prev => prev === 'light' ? 'dark' : 'light')
+            }
+
+            const openCourseModal = () => {
+                setEditingCourseId(null)
+                setCurrentIconBase64(null)
+                setCourseName('')
+                setCourseDoc('')
+                setCourseModalOpen(true)
+            }
+
+            const openEditCourseModal = (courseId) => {
+                const course = allCourses.find(c => c.id === courseId)
+                if (!course) return
+                setEditingCourseId(courseId)
+                setCurrentIconBase64(null)
+                setCourseName(course.title)
+                setCourseDoc(course.doc)
+                setCourseModalOpen(true)
+            }
+
+            const saveCourseData = () => {
+                if (!courseName.trim() || !courseDoc.trim()) {
+                    addToast('يرجى ملء جميع الحقول', 'error')
+                    return
+                }
+                if (editingCourseId) {
+                    setAllCourses(prev => prev.map(course => {
+                        if (course.id === editingCourseId) {
+                            return { ...course, title: courseName.trim(), doc: courseDoc.trim(), icon: currentIconBase64 || course.icon }
+                        }
+                        return course
+                    }))
+                    addToast('تم تعديل المقرر', 'success')
+                } else {
+                    const newCourse = { id: `course-${Date.now()}`, title: courseName.trim(), doc: courseDoc.trim(), icon: currentIconBase64 || getIcon(courseName), sections: [], notes: [] }
+                    setAllCourses(prev => [...prev, newCourse])
+                    addToast('تمت إضافة المقرر الجديد', 'success')
+                }
+                setCourseModalOpen(false)
+            }
+
+            const deleteCourse = (courseId) => {
+                if (confirm('هل أنت متأكد من الحذف؟')) {
+                    setAllCourses(prev => prev.filter(c => c.id !== courseId))
+                    if (currentCourseId === courseId) showHome()
+                    addToast('تم حذف المقرر', 'info')
+                }
+            }
+
+            const openDetail = (courseId) => {
+                setCurrentCourseId(courseId)
+                setView('detail')
+            }
+
+            const showHome = () => {
+                setCurrentCourseId(null)
+                setView('home')
+            }
+
+            const openLinkModal = (sectionIndex = null) => {
+                setTargetSectionIndex(sectionIndex)
+                setLinkName('')
+                setLinkUrl('')
+                setLinkModalOpen(true)
+            }
+
+            const saveLinkData = () => {
+                if (!linkName.trim() || !linkUrl.trim()) { addToast('يرجى ملء البيانات', 'error'); return }
+                setAllCourses(prev => prev.map(course => {
+                    if (course.id === currentCourseId) {
+                        if (targetSectionIndex !== null) {
+                            const newSections = [...course.sections]
+                            newSections[targetSectionIndex].links.push({ name: linkName.trim(), url: linkUrl.trim() })
+                            return { ...course, sections: newSections }
+                        } else {
+                            return { ...course, sections: [...course.sections, { name: `قسم جديد ${course.sections.length + 1}`, badge: 'مضاف', links: [{ name: linkName.trim(), url: linkUrl.trim() }] }] }
+                        }
+                    }
+                    return course
+                }))
+                setLinkModalOpen(false)
+                addToast('تم حفظ الرابط', 'success')
+            }
+
+            const deleteLink = (courseId, sectionIndex, linkIndex) => {
+                if(confirm('حذف هذا الرابط؟')) {
+                    setAllCourses(prev => prev.map(course => {
+                        if (course.id === courseId) {
+                            const newSections = [...course.sections]
+                            newSections[sectionIndex].links.splice(linkIndex, 1)
+                            if (newSections[sectionIndex].links.length === 0) newSections.splice(sectionIndex, 1)
+                            return { ...course, sections: newSections }
+                        }
+                        return course
+                    }))
+                    addToast('تم حذف الرابط', 'info')
+                }
+            }
+
+            const openEditLinkModal = (courseId, sectionIndex, linkIndex) => {
+                const course = allCourses.find(c => c.id === courseId)
+                if (!course) return
+                const link = course.sections[sectionIndex].links[linkIndex]
+                setEditingCourseId(courseId)
+                setEditingSectionIndex(sectionIndex)
+                setEditingLinkIndex(linkIndex)
+                setEditLinkName(link.name)
+                setEditLinkUrl(link.url)
+                setEditLinkModalOpen(true)
+            }
+
+            const saveEditedLink = () => {
+                if (!editLinkName.trim() || !editLinkUrl.trim()) { addToast('يرجى ملء البيانات', 'error'); return }
+                if (editingCourseId !== null && editingSectionIndex !== null && editingLinkIndex !== null) {
+                    setAllCourses(prev => prev.map(course => {
+                        if (course.id === editingCourseId) {
+                            const newSections = [...course.sections]
+                            newSections[editingSectionIndex].links[editingLinkIndex] = { name: editLinkName.trim(), url: editLinkUrl.trim() }
+                            return { ...course, sections: newSections }
+                        }
+                        return course
+                    }))
+                }
+                setEditLinkModalOpen(false)
+                addToast('تم تعديل الرابط', 'success')
+            }
+
+            const editSectionName = (courseId, sectionIndex) => {
+                const course = allCourses.find(c => c.id === courseId)
+                if (!course) return
+                const newName = prompt('أدخل الاسم الجديد للخانة:', course.sections[sectionIndex].name)
+                if (newName && newName.trim()) {
+                    setAllCourses(prev => prev.map(course => {
+                        if (course.id === courseId) {
+                            const newSections = [...course.sections]
+                            newSections[sectionIndex].name = newName.trim()
+                            return { ...course, sections: newSections }
+                        }
+                        return course
+                    }))
+                }
+            }
+
+            const deleteSection = (courseId, sectionIndex) => {
+                if (confirm('هل أنت متأكد من حذف هذه الخانة؟')) {
+                    setAllCourses(prev => prev.map(course => {
+                        if (course.id === courseId) {
+                            const newSections = [...course.sections]
+                            newSections.splice(sectionIndex, 1)
+                            return { ...course, sections: newSections }
+                        }
+                        return course
+                    }))
+                    addToast('تم حذف الخانة', 'info')
+                }
+            }
+
+            // Drag & Drop
+            const handleLinkDragStart = (e, sectionIndex, linkIndex) => { setDraggedLinkInfo({ sectionIndex, linkIndex }); e.dataTransfer.effectAllowed = 'move' }
+            const handleLinkDragOver = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }
+            const handleLinkDrop = (e, targetSectionIndex, targetLinkIndex) => {
+                e.preventDefault()
+                if (!draggedLinkInfo || !currentCourseId) return
+                const { sectionIndex: sourceSectionIndex, linkIndex: sourceLinkIndex } = draggedLinkInfo
+                if (sourceSectionIndex === targetSectionIndex && sourceLinkIndex === targetLinkIndex) { setDraggedLinkInfo(null); return }
+                setAllCourses(prev => prev.map(course => {
+                    if (course.id === currentCourseId) {
+                        const newSections = [...course.sections]
+                        const [draggedLink] = newSections[sourceSectionIndex].links.splice(sourceLinkIndex, 1)
+                        newSections[targetSectionIndex].links.splice(targetLinkIndex, 0, draggedLink)
+                        const filteredSections = newSections.filter(s => s.links.length > 0)
+                        return { ...course, sections: filteredSections }
+                    }
+                    return course
+                }))
+                setDraggedLinkInfo(null)
+            }
+
+            const handleCourseDragStart = (e, courseIndex) => { setDraggedCourseIndex(courseIndex); e.dataTransfer.effectAllowed = 'move' }
+            const handleCourseDragOver = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }
+            const handleCourseDrop = (e, targetIndex) => {
+                e.preventDefault()
+                if (draggedCourseIndex === null || draggedCourseIndex === targetIndex) { setDraggedCourseIndex(null); return }
+                setAllCourses(prev => {
+                    const newCourses = [...prev]
+                    const [draggedCourse] = newCourses.splice(draggedCourseIndex, 1)
+                    newCourses.splice(targetIndex, 0, draggedCourse)
+                    return newCourses
+                })
+                setDraggedCourseIndex(null)
+            }
+
+            const handleSectionDragStart = (e, sectionIndex) => { setDraggedSectionIndex(sectionIndex); e.dataTransfer.effectAllowed = 'move' }
+            const handleSectionDragOver = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move' }
+            const handleSectionDrop = (e, targetIndex) => {
+                e.preventDefault()
+                if (draggedSectionIndex === null || draggedSectionIndex === targetIndex) { setDraggedSectionIndex(null); return }
+                setAllCourses(prev => prev.map(course => {
+                    if (course.id === currentCourseId) {
+                        const newSections = [...course.sections]
+                        const [draggedSection] = newSections.splice(draggedSectionIndex, 1)
+                        newSections.splice(targetIndex, 0, draggedSection)
+                        return { ...course, sections: newSections }
+                    }
+                    return course
+                }))
+                setDraggedSectionIndex(null)
+            }
+
+            const handleImageUpload = (e) => {
+                const file = e.target.files?.[0]
+                if (file) {
+                    if (file.type !== 'image/png') { addToast('يرجى اختيار ملف بصيغة PNG فقط', 'error'); return }
+                    const reader = new FileReader()
+                    reader.onload = (event) => { setCurrentIconBase64(event.target?.result) }
+                    reader.readAsDataURL(file)
+                }
+            }
+
+            const filteredCourses = allCourses.filter(course => {
+                const term = searchTerm.toLowerCase()
+                return course.title.toLowerCase().includes(term) || course.doc.toLowerCase().includes(term)
+            })
+
+            const currentCourse = allCourses.find(c => c.id === currentCourseId)
+
+            return (
+                <div className={`min-h-screen flex flex-col transition-colors duration-300 ${theme === 'dark' ? 'dark-mode' : ''}`}>
+                    <div className="toast-container">
+                        {toasts.map(toast => (
+                            <Toast key={toast.id} message={toast.message} type={toast.type} onClose={() => removeToast(toast.id)} />
+                        ))}
+                    </div>
+
+                    <header>
                         <div className={`${view === 'detail' ? 'max-w-full px-4 md:px-8' : 'max-w-7xl'} mx-auto flex justify-between items-center`}>
                             <div className="flex items-center gap-3 text-2xl font-black text-[var(--primary-dark)] cursor-pointer" onClick={showHome}>
                                 <i className="fa-solid fa-network-wired text-[var(--accent)]"></i> CCE Hub
                             </div>
                             
                             <div className="flex items-center gap-4">
-                                {/* Export Button - This specific div will be removed in downloaded file */}
-                                <div id="export-wrapper" className="hidden md:flex">
-                                    <button className="btn-export" onClick={downloadCurrentApp} title="تحميل نسخة HTML معدلة تحتوي على تعديلاتك">
+                                <div id="export-wrapper">
+                                    <button className="btn-export" onClick={downloadCurrentApp}>
                                         <i className="fa-solid fa-download"></i> حفظ نسخة
                                     </button>
                                 </div>
@@ -1116,7 +1852,6 @@
                                 </div>
                             </div>
                         </div>
-                        {/* Mobile Search Bar */}
                         <div className="md:hidden px-4 mt-3">
                             <input
                                 type="text"
@@ -1129,7 +1864,6 @@
                     </header>
 
                     <main className={`${view === 'detail' ? 'w-full px-4 md:px-8' : 'max-w-7xl'} mx-auto py-10 flex-1 min-h-[70vh]`}>
-                        {/* Home View */}
                         {view === 'home' && (
                             <div>
                                 <div className="text-center mb-10">
@@ -1153,11 +1887,7 @@
                                             onDragOver={handleCourseDragOver}
                                             onDrop={(e) => handleCourseDrop(e, index)}
                                             onDragLeave={(e) => e.currentTarget.classList.remove('drag-over')}
-                                            onDragEnter={(e) => {
-                                                if (draggedCourseIndex !== null && draggedCourseIndex !== index) {
-                                                    e.currentTarget.classList.add('drag-over')
-                                                }
-                                            }}
+                                            onDragEnter={(e) => { if (draggedCourseIndex !== null && draggedCourseIndex !== index) e.currentTarget.classList.add('drag-over') }}
                                             onClick={(e) => {
                                                 if (!e.target.closest('.card-actions') && !e.target.closest('.course-drag-handle')) {
                                                     openDetail(course.id)
@@ -1175,7 +1905,6 @@
                                                 </button>
                                             </div>
                                             
-                                            {/* FIXED ICON CONTAINER */}
                                             <div className="fixed-icon-container">
                                                 {course.icon.startsWith('data:image') ? (
                                                     <img src={course.icon} alt={course.title} />
@@ -1192,7 +1921,6 @@
                             </div>
                         )}
 
-                        {/* Detail View */}
                         {view === 'detail' && currentCourse && (
                             <div className="w-full">
                                 <button className="bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-secondary)] px-6 py-3 rounded-xl cursor-pointer font-bold flex items-center gap-3 mb-8 hover:bg-[var(--primary)] hover:text-white hover:border-[var(--primary)] transition-all shadow-sm" onClick={showHome}>
@@ -1200,7 +1928,6 @@
                                 </button>
                                 
                                 <div className="max-w-4xl mx-auto bg-[var(--bg-card)] p-10 rounded-3xl shadow-sm text-center border border-[var(--border-color)] mb-12">
-                                    {/* FIXED ICON CONTAINER */}
                                     <div className="fixed-icon-container !w-24 !h-24 !text-5xl !mb-6 !shadow-xl">
                                         {currentCourse.icon.startsWith('data:image') ? (
                                             <img src={currentCourse.icon} alt={currentCourse.title} />
@@ -1221,7 +1948,6 @@
                                     </div>
                                 </div>
 
-                                {/* Notes Board Section */}
                                 <div className="max-w-6xl mx-auto mb-12">
                                     <div className="flex justify-between items-center mb-6 px-2">
                                         <h3 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-3">
@@ -1277,8 +2003,8 @@
                                                         {section.badge && <span className="text-xs bg-[var(--accent)] text-white px-3 py-1 rounded-full font-bold shadow-sm">{section.badge}</span>}
                                                     </div>
                                                     <div className="flex gap-2">
-                                                        <button className="action-btn" onClick={() => openLinkModal(sIndex)} title="إضافة رابط داخل هذه الخانة"><i className="fa-solid fa-plus"></i></button>
-                                                        <button className="action-btn" onClick={() => editSectionName(currentCourse.id, sIndex)} title="تعديل اسم الخانة"><i className="fa-solid fa-pen"></i></button>
+                                                        <button className="action-btn" onClick={() => openLinkModal(sIndex)} title="إضافة رابط"><i className="fa-solid fa-plus"></i></button>
+                                                        <button className="action-btn" onClick={() => editSectionName(currentCourse.id, sIndex)} title="تعديل الاسم"><i className="fa-solid fa-pen"></i></button>
                                                         <button className="action-btn delete" onClick={() => deleteSection(currentCourse.id, sIndex)} title="حذف الخانة"><i className="fa-solid fa-trash"></i></button>
                                                     </div>
                                                 </div>
@@ -1302,17 +2028,14 @@
                                                             
                                                             <button 
                                                                 className="bg-transparent border-none text-[var(--text-secondary)] cursor-pointer ml-4 hover:text-[var(--accent)] transition-colors flex-shrink-0 text-lg p-2" 
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    window.open(link.url, '_blank');
-                                                                }} 
-                                                                title="فتح الرابط في نافذة جديدة"
+                                                                onClick={(e) => { e.stopPropagation(); window.open(link.url, '_blank'); }}
+                                                                title="فتح الرابط"
                                                             >
                                                                 <i className="fa-solid fa-up-right-from-square"></i>
                                                             </button>
                                                             
-                                                            <button className="bg-transparent border-none text-[var(--text-secondary)] cursor-pointer ml-4 hover:text-[var(--primary)] transition-colors flex-shrink-0 text-lg p-2" onClick={() => openEditLinkModal(currentCourse.id, sIndex, lIndex)} title="تعديل الرابط"><i className="fa-solid fa-pen"></i></button>
-                                                            <button className="bg-transparent border-none text-[var(--text-secondary)] cursor-pointer ml-4 hover:text-[var(--danger)] transition-colors flex-shrink-0 text-lg p-2" onClick={() => deleteLink(currentCourse.id, sIndex, lIndex)} title="حذف الرابط"><i className="fa-solid fa-trash"></i></button>
+                                                            <button className="bg-transparent border-none text-[var(--text-secondary)] cursor-pointer ml-4 hover:text-[var(--primary)] transition-colors flex-shrink-0 text-lg p-2" onClick={() => openEditLinkModal(currentCourse.id, sIndex, lIndex)}><i className="fa-solid fa-pen"></i></button>
+                                                            <button className="bg-transparent border-none text-[var(--text-secondary)] cursor-pointer ml-4 hover:text-[var(--danger)] transition-colors flex-shrink-0 text-lg p-2" onClick={() => deleteLink(currentCourse.id, sIndex, lIndex)}><i className="fa-solid fa-trash"></i></button>
                                                         </li>
                                                     ))}
                                                 </ul>
@@ -1328,7 +2051,6 @@
                         <p className="font-medium">© 2026 CCE Hub. نظام إدارة المحتوى الموحد.</p>
                     </footer>
 
-                    {/* Modals */}
                     {courseModalOpen && (
                         <div className="modal-backdrop" role="dialog" onClick={() => setCourseModalOpen(false)}>
                             <div onClick={e => e.stopPropagation()}>
@@ -1338,69 +2060,27 @@
                                 
                                 <div className="mb-8">
                                     <label className="block mb-3 font-bold text-[var(--text-primary)] text-lg">اسم المقرر</label>
-                                    <input
-                                        className="form-input"
-                                        value={courseName}
-                                        onChange={(e) => setCourseName(e.target.value)}
-                                        placeholder="مثال: فيزياء الحالة الصلبة"
-                                    />
+                                    <input className="form-input" value={courseName} onChange={(e) => setCourseName(e.target.value)} placeholder="مثال: فيزياء الحالة الصلبة" />
                                 </div>
                                 
                                 <div className="mb-8">
                                     <label className="block mb-3 font-bold text-[var(--text-primary)] text-lg">اسم الدكتور / الملاحظة</label>
-                                    <input
-                                        className="form-input"
-                                        value={courseDoc}
-                                        onChange={(e) => setCourseDoc(e.target.value)}
-                                        placeholder="مثال: دكتور فلان"
-                                    />
+                                    <input className="form-input" value={courseDoc} onChange={(e) => setCourseDoc(e.target.value)} placeholder="مثال: دكتور فلان" />
                                 </div>
                                 
                                 <div className="mb-8">
                                     <label className="block mb-3 font-bold text-[var(--text-primary)] text-lg">أيقونة المقرر (اختياري - PNG)</label>
                                     <div className="flex items-center gap-4 flex-wrap">
-                                        <button
-                                            type="button"
-                                            className="bg-[var(--bg-body)] text-[var(--text-primary)] border-2 border-dashed border-[var(--border-color)] px-6 py-4 rounded-xl cursor-pointer font-bold hover:border-[var(--primary)] hover:text-[var(--primary)] transition-colors flex items-center gap-3 text-lg"
-                                            onClick={() => fileInputRef.current?.click()}
-                                        >
+                                        <button type="button" className="bg-[var(--bg-body)] text-[var(--text-primary)] border-2 border-dashed border-[var(--border-color)] px-6 py-4 rounded-xl cursor-pointer font-bold hover:border-[var(--primary)] hover:text-[var(--primary)] transition-colors flex items-center gap-3 text-lg" onClick={() => fileInputRef.current?.click()}>
                                             <i className="fa-solid fa-image"></i> رفع صورة
                                         </button>
-                                        {currentIconBase64 && (
-                                            <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-[var(--border-color)] flex-shrink-0 shadow-md">
-                                                <img src={currentIconBase64} alt="Preview" className="w-full h-full object-cover" />
-                                            </div>
-                                        )}
-                                        {editingCourseId && !currentIconBase64 && currentCourse?.icon.startsWith('data:image') && (
-                                            <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-[var(--border-color)] flex-shrink-0 shadow-md">
-                                                <img src={currentCourse.icon} alt="Current" className="w-full h-full object-cover" />
-                                            </div>
-                                        )}
-                                        <input
-                                            ref={fileInputRef}
-                                            type="file"
-                                            accept="image/png"
-                                            onChange={handleImageUpload}
-                                            style={{ display: 'none' }}
-                                        />
+                                        {currentIconBase64 && <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-[var(--border-color)] flex-shrink-0 shadow-md"><img src={currentIconBase64} alt="Preview" className="w-full h-full object-cover" /></div>}
+                                        <input ref={fileInputRef} type="file" accept="image/png" onChange={handleImageUpload} style={{ display: 'none' }} />
                                     </div>
                                 </div>
 
                                 <div className="mt-10 pt-6 border-t border-[var(--border-color)] flex justify-end gap-4 flex-wrap">
-                                    {editingCourseId && (
-                                        <button
-                                            className="btn-delete"
-                                            onClick={() => {
-                                                if (confirm('هل أنت متأكد من حذف هذا المقرر وجميع محتوياته؟')) {
-                                                    deleteCourse(editingCourseId)
-                                                    setCourseModalOpen(false)
-                                                    showHome()
-                                                }
-                                            }}
-                                        >
-                                            حذف المقرر
-                                        </button>
-                                    )}
+                                    {editingCourseId && <button className="btn-delete" onClick={() => { if(confirm('هل أنت متأكد؟')) { deleteCourse(editingCourseId); setCourseModalOpen(false); showHome(); } }}>حذف المقرر</button>}
                                     <div className="flex-grow"></div>
                                     <button className="btn-cancel" onClick={() => setCourseModalOpen(false)}>إلغاء</button>
                                     <button className="btn-save" onClick={saveCourseData}>حفظ</button>
@@ -1415,16 +2095,9 @@
                                 <h2 className="text-3xl font-black text-[var(--primary-dark)] mb-8 text-center">
                                     {editingNoteId ? 'تعديل الملاحظة' : 'إضافة ملاحظة جديدة'}
                                 </h2>
-                                
                                 <div className="mb-8">
-                                    <textarea
-                                        className="form-input min-h-[180px]"
-                                        value={tempNoteContent}
-                                        onChange={(e) => setTempNoteContent(e.target.value)}
-                                        placeholder="اكتب ملاحظاتك هنا..."
-                                    ></textarea>
+                                    <textarea className="form-input min-h-[180px]" value={tempNoteContent} onChange={(e) => setTempNoteContent(e.target.value)} placeholder="اكتب ملاحظاتك هنا..."></textarea>
                                 </div>
-
                                 <div className="mt-10 pt-6 border-t border-[var(--border-color)] flex justify-end gap-4">
                                     <button className="btn-cancel" onClick={() => setNoteModalOpen(false)}>إلغاء</button>
                                     <button className="btn-save" onClick={saveNote}>حفظ</button>
@@ -1437,29 +2110,16 @@
                         <div className="modal-backdrop" role="dialog" onClick={() => setLinkModalOpen(false)}>
                             <div onClick={e => e.stopPropagation()}>
                                 <h2 className="text-3xl font-black text-[var(--primary-dark)] mb-8 text-center">
-                                    {targetSectionIndex !== null ? 'إضافة رابط للخانة' : 'إضافة خانة جديدة'}
+                                    {targetSectionIndex !== null ? 'إضافة رابط' : 'إضافة خانة جديدة'}
                                 </h2>
-                                
                                 <div className="mb-8">
                                     <label className="block mb-3 font-bold text-[var(--text-primary)] text-lg">اسم الرابط</label>
-                                    <input
-                                        className="form-input"
-                                        value={linkName}
-                                        onChange={(e) => setLinkName(e.target.value)}
-                                        placeholder="مثال: شابتر 1، شرح كامل"
-                                    />
+                                    <input className="form-input" value={linkName} onChange={(e) => setLinkName(e.target.value)} placeholder="اسم الرابط" />
                                 </div>
-                                
                                 <div className="mb-8">
                                     <label className="block mb-3 font-bold text-[var(--text-primary)] text-lg">الرابط</label>
-                                    <input
-                                        className="form-input"
-                                        value={linkUrl}
-                                        onChange={(e) => setLinkUrl(e.target.value)}
-                                        placeholder="https://..."
-                                    />
+                                    <input className="form-input" value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="https://..." />
                                 </div>
-
                                 <div className="mt-10 pt-6 border-t border-[var(--border-color)] flex justify-end gap-4">
                                     <button className="btn-cancel" onClick={() => setLinkModalOpen(false)}>إلغاء</button>
                                     <button className="btn-save" onClick={saveLinkData}>حفظ الرابط</button>
@@ -1472,27 +2132,14 @@
                         <div className="modal-backdrop" role="dialog" onClick={() => setEditLinkModalOpen(false)}>
                             <div onClick={e => e.stopPropagation()}>
                                 <h2 className="text-3xl font-black text-[var(--primary-dark)] mb-8 text-center">تعديل الرابط</h2>
-                                
                                 <div className="mb-8">
                                     <label className="block mb-3 font-bold text-[var(--text-primary)] text-lg">اسم الرابط</label>
-                                    <input
-                                        className="form-input"
-                                        value={editLinkName}
-                                        onChange={(e) => setEditLinkName(e.target.value)}
-                                        placeholder="اسم الرابط"
-                                    />
+                                    <input className="form-input" value={editLinkName} onChange={(e) => setEditLinkName(e.target.value)} />
                                 </div>
-                                
                                 <div className="mb-8">
                                     <label className="block mb-3 font-bold text-[var(--text-primary)] text-lg">الرابط</label>
-                                    <input
-                                        className="form-input"
-                                        value={editLinkUrl}
-                                        onChange={(e) => setEditLinkUrl(e.target.value)}
-                                        placeholder="https://..."
-                                    />
+                                    <input className="form-input" value={editLinkUrl} onChange={(e) => setEditLinkUrl(e.target.value)} />
                                 </div>
-
                                 <div className="mt-10 pt-6 border-t border-[var(--border-color)] flex justify-end gap-4">
                                     <button className="btn-cancel" onClick={() => setEditLinkModalOpen(false)}>إلغاء</button>
                                     <button className="btn-save" onClick={saveEditedLink}>حفظ التعديلات</button>
