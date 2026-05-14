@@ -275,9 +275,46 @@ function App() {
   const [selectedCourseId, setSelectedCourseId] = useState(null);
   const [darkMode, setDarkMode] = useState(true);
 
+  // URL Routing - Read hash on load
+  useEffect(() => {
+    const hash = window.location.hash.slice(1);
+    if (hash && courses.find(c => c.id === hash)) {
+      setSelectedCourseId(hash);
+    }
+  }, []);
+
+  // Update URL when course changes
+  useEffect(() => {
+    if (selectedCourseId) {
+      window.location.hash = selectedCourseId;
+    } else {
+      if (window.location.hash) {
+        history.pushState('', document.title, window.location.pathname + window.location.search);
+      }
+    }
+  }, [selectedCourseId]);
+
+  // Listen for hash changes (browser back/forward)
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.slice(1);
+      if (hash && courses.find(c => c.id === hash)) {
+        setSelectedCourseId(hash);
+      } else {
+        setSelectedCourseId(null);
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [courses]);
+
   useEffect(() => { if(darkMode) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); }, [darkMode]);
 
   const selectedCourse = courses.find(c => c.id === selectedCourseId);
+
+  const handleBack = () => {
+    setSelectedCourseId(null);
+  };
 
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-300 ${darkMode ? 'dark bg-gray-950' : 'bg-gray-50'} dot-pattern`}>
@@ -285,7 +322,7 @@ function App() {
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             {selectedCourse && (
-              <button onClick={() => setSelectedCourseId(null)} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400"><i className="fa fa-arrow-right"></i></button>
+              <button onClick={handleBack} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400"><i className="fa fa-arrow-right"></i></button>
             )}
             <div className="flex items-center gap-2">
               <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white"><i className="fa fa-graduation-cap text-sm"></i></div>
@@ -303,7 +340,7 @@ function App() {
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8">
         {selectedCourse ? (
-          <CourseDetail course={selectedCourse} onBack={() => setSelectedCourseId(null)} />
+          <CourseDetail course={selectedCourse} onBack={handleBack} />
         ) : (
           <HomeView courses={courses} onSelectCourse={setSelectedCourseId} />
         )}
